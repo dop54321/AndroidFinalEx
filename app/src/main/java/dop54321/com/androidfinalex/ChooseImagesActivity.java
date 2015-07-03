@@ -2,6 +2,7 @@ package dop54321.com.androidfinalex;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -15,21 +16,30 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class ChooseImagesActivity extends ActionBarActivity {
 
-    private static final int RESULT_LOAD_IMG = 123123;
+    private static final int RESULT_LOAD_IMG = 1231;
     private int position;
     private ImageAdapter imageAdapter=new ImageAdapter(this);
+    private ImageLoader imageLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_images);
-
+        imageLoader = ImageLoader.getInstance();
+        imageLoader.init(ImageLoaderConfiguration.createDefault(this));
 
         GridView gridview = (GridView) findViewById(R.id.gridView);
         imageAdapter = new ImageAdapter(this);
@@ -46,8 +56,6 @@ public class ChooseImagesActivity extends ActionBarActivity {
                 // Start the Intent
                 startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
 
-                Toast.makeText(ChooseImagesActivity.this, "" + position,
-                        Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -101,6 +109,8 @@ public class ChooseImagesActivity extends ActionBarActivity {
     }
 
     private class ImageAdapter extends BaseAdapter {
+        private final DisplayImageOptions options;
+
         List<Uri> storedImages = new ArrayList<>(16);
         Context context;
         private Integer mThumbIds = R.drawable.default_pic;
@@ -108,8 +118,21 @@ public class ChooseImagesActivity extends ActionBarActivity {
         public ImageAdapter(Context context) {
             this.context = context;
             for (int i = 0; i < 16; i++) {
-                storedImages.add(null);
+                storedImages.add(i,null);
             }
+
+            options = new DisplayImageOptions.Builder()
+                    .showImageOnLoading(R.drawable.default_pic)
+                    .showImageForEmptyUri(R.drawable.default_pic)
+                    .showImageOnFail(R.drawable.default_pic)
+                    .cacheInMemory(true)
+                    .cacheOnDisk(true)
+                    .considerExifParams(true)
+                    .bitmapConfig(Bitmap.Config.RGB_565)
+                    .build();
+
+
+
         }
 
         @Override
@@ -149,7 +172,10 @@ public class ChooseImagesActivity extends ActionBarActivity {
             if (uri == null) {
                 imageView.setImageResource(mThumbIds);
             } else {
-                imageView.setImageURI(uri);
+
+
+                imageLoader.displayImage(uri.toString(), imageView,options);
+
             }
             return imageView;
         }
