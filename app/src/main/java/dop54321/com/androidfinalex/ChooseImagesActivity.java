@@ -162,9 +162,9 @@ public class ChooseImagesActivity extends ActionBarActivity {
             if (convertView == null) {
                 // if it's not recycled, initialize some attributes
                 imageView = new ImageView(context);
-                imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
+                imageView.setLayoutParams(new GridView.LayoutParams(185, 185));
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setPadding(8, 8, 8, 8);
+                imageView.setPadding(2, 2, 2, 2);
             } else {
                 imageView = (ImageView) convertView;
             }
