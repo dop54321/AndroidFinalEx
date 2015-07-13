@@ -90,7 +90,7 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerVi
             cardView= (CardView) itemView.findViewById(R.id.cv);
 
 
-            imgThumbnail = (ImageView)itemView.findViewById(R.id.img_thumbnail);
+            imgThumbnail = (SquareImageView) itemView.findViewById(R.id.img_thumbnail);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

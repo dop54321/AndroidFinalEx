@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameRecord {
-    int gameId;
-    List<GameCard> gameCards;
+    private int gameId;
+    private List<GameCard> gameCards;
 
 
     public GameRecord() {

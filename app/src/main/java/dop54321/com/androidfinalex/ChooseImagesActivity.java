@@ -86,7 +86,7 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
                 Uri uri = Uri.parse(picturePath);
                 //this.clickedCard.setImageRef(uri);
 
-                //check if image has selected yet
+                //check if image has selected yet (already exist..)
                 if (!isUriExist(uri, mAdapter.getmGameCards())) {
                     this.mAdapter.getmGameCards().get(clickedCardPosition).setImageRef(uri);
                     int otherPosition = calculateOtherPosition(clickedCardPosition);
@@ -138,17 +138,37 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }else if (id==R.id.action_complete){
+            if (isAllCardsFilled(this.gameRecord)){
+                //display dialog for enter game id
+                //TODO: display dialog for enter game id
+
+                //add the entered game id to the game record
+                //TODO: add the entered game id to the game record
+
+                //save game record in local sql
+                MySqlAdapter sqlManager = MySqlAdapter.getInstanse();
+                sqlManager.insertGameRecord(this.gameRecord);
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private boolean isAllCardsFilled(GameRecord gameRecord) {
+        Boolean valid=true;
+        for (GameCard gameCard : gameRecord.getGameCards()) {
+            if (gameCard.getImageRef()==null){
+                valid=false;
+            }
+        }
+        return valid;
     }
 
 

@@ -21,7 +21,7 @@ public class LogInActivity extends ActionBarActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
-
+        MySqlAdapter.build(this);
         initViews();
 
         setActivityClickListeners();

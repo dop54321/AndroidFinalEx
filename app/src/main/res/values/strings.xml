@@ -8,4 +8,5 @@
     <string name="dialog_choose_game_id_title">Load game</string>
     <string name="title_activity_choose_images">Choose Images</string>
     <string name="save_images_start_play">Save and start game</string>
+    <string name="action_complete_create_images_for_game">complete</string>
 </resources>
