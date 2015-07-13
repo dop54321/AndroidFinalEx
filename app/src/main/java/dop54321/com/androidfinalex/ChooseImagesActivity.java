@@ -1,64 +1,68 @@
 package dop54321.com.androidfinalex;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class ChooseImagesActivity extends ActionBarActivity {
+public class ChooseImagesActivity extends AppCompatActivity implements GridRecyclerViewAdapter.OnItemClickCallback {
 
     private static final int RESULT_LOAD_IMG = 1231;
-    private int position;
-    private ImageAdapter imageAdapter=new ImageAdapter(this);
-    private ImageLoader imageLoader;
+
+
+    RecyclerView mRecyclerView;
+    RecyclerView.LayoutManager mLayoutManager;
+    GridRecyclerViewAdapter mAdapter;
+    List<GameCard> gameCards;
+
+    GameRecord gameRecord = new GameRecord();
+    private GameCard clickedCard;
+    private int clickedCardPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_images);
-        imageLoader = ImageLoader.getInstance();
-        imageLoader.init(ImageLoaderConfiguration.createDefault(this));
+        gameCards = new ArrayList<>(16);
 
-        GridView gridview = (GridView) findViewById(R.id.gridView);
-        imageAdapter = new ImageAdapter(this);
-        gridview.setAdapter(imageAdapter);
+        // Calling the RecyclerView
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
 
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
+        // The number of Columns
+        mLayoutManager = new GridLayoutManager(this, 4);
 
-                ChooseImagesActivity.this.position=position;
-                // Create intent to Open Image applications like Gallery, Google Photos
-                Intent galleryIntent = new Intent(Intent.ACTION_PICK,
-                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                // Start the Intent
-                startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
-            }
-        });
+        mAdapter = new GridRecyclerViewAdapter(gameRecord.getGameCards(), this);
+        mAdapter.setMyCallback(this);
 
+        mRecyclerView.setAdapter(mAdapter);
+
+    }
+
+    private void startPickImageActivity(int position) {
+        // Create intent to Open Image applications like Gallery, Google Photos
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+        galleryIntent.setType("image/*");
+
+        //Intent galleryIntent = new Intent(Intent.ACTION_PICK,
+        //      android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+        // Start the Intent
+        startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
     }
 
     @Override
@@ -70,20 +74,59 @@ public class ChooseImagesActivity extends ActionBarActivity {
                     && null != data) {
                 // Get the Image from data
 
-                Uri selectedImageUri = data.getData();
+                Uri selectedImage = data.getData();
+                String[] filePathColumn = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                String picturePath = cursor.getString(columnIndex);
+                cursor.close();
 
-                List<Uri> storedImages = imageAdapter.getStoredImages();
-                storedImages.set(ChooseImagesActivity.this.position,selectedImageUri);
-                imageAdapter.notifyDataSetChanged();
+
+                Uri uri = Uri.parse(picturePath);
+                //this.clickedCard.setImageRef(uri);
+
+                //check if image has selected yet
+                if (!isUriExist(uri, mAdapter.getmGameCards())) {
+                    this.mAdapter.getmGameCards().get(clickedCardPosition).setImageRef(uri);
+                    int otherPosition = calculateOtherPosition(clickedCardPosition);
+                    this.mAdapter.getmGameCards().get(otherPosition).setImageRef(uri);
+                    this.mAdapter.notifyItemChanged(clickedCardPosition);
+                    this.mAdapter.notifyItemChanged(otherPosition);
+                }else
+                    throw new IllegalArgumentException("Image allready in the game.");
+
 
             } else {
                 Toast.makeText(this, "You haven't picked Image",
                         Toast.LENGTH_LONG).show();
             }
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(this,e.getMessage(), Toast.LENGTH_LONG)
+                    .show();
         } catch (Exception e) {
             Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG)
                     .show();
         }
+    }
+
+    private boolean isUriExist(Uri uri, List<GameCard> gameCards) {
+        Boolean exist=false;
+        for (GameCard gameCard : gameCards) {
+            if (gameCard.getImageRef()!=null) {
+                if (gameCard.getImageRef().equals(uri))
+                    exist=true;
+            }
+        }
+        return exist;
+    }
+
+    private int calculateOtherPosition(int clickedCardPosition) {
+        int modo = clickedCardPosition % 2;
+        if (modo == 0)
+            return clickedCardPosition + 1;
+        else
+            return clickedCardPosition - 1;
     }
 
     @Override
@@ -108,81 +151,12 @@ public class ChooseImagesActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class ImageAdapter extends BaseAdapter {
-        private final DisplayImageOptions options;
 
-        List<Uri> storedImages = new ArrayList<>(16);
-        Context context;
-        private Integer mThumbIds = R.drawable.default_pic;
+    @Override
+    public void onItemClicked(GameCard clickedImage, View view, int position) {
+        this.clickedCard = clickedImage;
+        this.clickedCardPosition = position;
+        startPickImageActivity(position);
 
-        public ImageAdapter(Context context) {
-            this.context = context;
-            for (int i = 0; i < 16; i++) {
-                storedImages.add(i,null);
-            }
-
-            options = new DisplayImageOptions.Builder()
-                    .showImageOnLoading(R.drawable.default_pic)
-                    .showImageForEmptyUri(R.drawable.default_pic)
-                    .showImageOnFail(R.drawable.default_pic)
-                    .cacheInMemory(true)
-                    .cacheOnDisk(true)
-                    .considerExifParams(true)
-                    .bitmapConfig(Bitmap.Config.RGB_565)
-                    .build();
-
-
-
-        }
-
-        @Override
-        public int getCount() {
-            return 16;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            Uri uri = storedImages.get(position);
-            if (uri == null) {
-                return mThumbIds;
-            } else {
-                return uri;
-            }
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView;
-
-            if (convertView == null) {
-                // if it's not recycled, initialize some attributes
-                imageView = new ImageView(context);
-                imageView.setLayoutParams(new GridView.LayoutParams(185, 185));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setPadding(2, 2, 2, 2);
-            } else {
-                imageView = (ImageView) convertView;
-            }
-            Uri uri = storedImages.get(position);
-            if (uri == null) {
-                imageView.setImageResource(mThumbIds);
-            } else {
-
-
-                imageLoader.displayImage(uri.toString(), imageView,options);
-
-            }
-            return imageView;
-        }
-
-        public List<Uri> getStoredImages() {
-            return storedImages;
-        }
     }
-
 }

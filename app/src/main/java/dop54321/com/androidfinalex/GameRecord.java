@@ -2,22 +2,27 @@ package dop54321.com.androidfinalex;
 
 import android.net.Uri;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by dop54321 on 03/07/2015.
- */
 public class GameRecord {
     int gameId;
-    List<Uri> imageUris;
+    List<GameCard> gameCards;
+
 
     public GameRecord() {
+        gameId=-1;
+        gameCards =new ArrayList<>(16);
+        for (int i = 0; i < 16; i++) {
+            gameCards.add(i,new GameCard());
+        }
     }
 
-    public GameRecord(int gameId, List<Uri> imageUris) {
+    public GameRecord(int gameId, List<GameCard> imageUris) {
         this.gameId = gameId;
-        this.imageUris = imageUris;
+        this.gameCards = imageUris;
     }
+
 
     public int getGameId() {
         return gameId;
@@ -27,11 +32,11 @@ public class GameRecord {
         this.gameId = gameId;
     }
 
-    public List<Uri> getImageUris() {
-        return imageUris;
+    public List<GameCard> getGameCards() {
+        return gameCards;
     }
 
-    public void setImageUris(List<Uri> imageUris) {
-        this.imageUris = imageUris;
+    public void setGameCards(List<GameCard> gameCards) {
+        this.gameCards = gameCards;
     }
 }

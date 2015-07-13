@@ -11,9 +11,6 @@ import android.net.Uri;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by dop54321 on 03/07/2015.
- */
 public class MySqlAdapter {
 
     public static final int URI_LIST_SIZE = 8;
@@ -23,22 +20,22 @@ public class MySqlAdapter {
         mySqlHelper = new MySqlHelper(context);
     }
 
-    private long insertGameRecord(int gameId, List<Uri> imageUris) {
+    private long insertGameRecord(int gameId, List<GameCard> gameCards) {
         ContentValues contentValues = new ContentValues();
         long id = -1;
-        if (imageUris.size() == URI_LIST_SIZE && legalGameId(gameId)) {
+        if (gameCards.size() == URI_LIST_SIZE && legalGameId(gameId)) {
 
             SQLiteDatabase db = mySqlHelper.getWritableDatabase();
 
             contentValues.put(MySqlHelper.GID, gameId);
-            contentValues.put(MySqlHelper.URI1, imageUris.get(1).toString());
-            contentValues.put(MySqlHelper.URI2, imageUris.get(2).toString());
-            contentValues.put(MySqlHelper.URI3, imageUris.get(3).toString());
-            contentValues.put(MySqlHelper.URI4, imageUris.get(4).toString());
-            contentValues.put(MySqlHelper.URI5, imageUris.get(5).toString());
-            contentValues.put(MySqlHelper.URI6, imageUris.get(6).toString());
-            contentValues.put(MySqlHelper.URI7, imageUris.get(7).toString());
-            contentValues.put(MySqlHelper.URI8, imageUris.get(8).toString());
+            contentValues.put(MySqlHelper.URI1, gameCards.get(1).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI2, gameCards.get(2).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI3, gameCards.get(3).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI4, gameCards.get(4).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI5, gameCards.get(5).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI6, gameCards.get(6).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI7, gameCards.get(7).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI8, gameCards.get(8).getImageRef().toString());
 
             try {
                 id = db.insertOrThrow(MySqlHelper.GAME_TABLE_NAME, null, contentValues);
@@ -51,7 +48,7 @@ public class MySqlAdapter {
     }
 
     public long insertGameRecord(GameRecord gameRecord) {
-        return insertGameRecord(gameRecord.gameId, gameRecord.getImageUris());
+        return insertGameRecord(gameRecord.gameId, gameRecord.getGameCards());
     }
 
     public GameRecord getGameRecord(int gameId) {
@@ -91,7 +88,7 @@ public class MySqlAdapter {
         int indUri7 = cursor.getColumnIndex(MySqlHelper.URI7);
         int indUri8 = cursor.getColumnIndex(MySqlHelper.URI8);
 
-        List<Uri> imageUris = new ArrayList<>(8);
+        List<GameCard> gameCards = new ArrayList<>(8);
 
         int retGameId = cursor.getInt(indGid);
         String uri1 = cursor.getString(indUri1);
@@ -102,18 +99,18 @@ public class MySqlAdapter {
         String uri6 = cursor.getString(indUri6);
         String uri7 = cursor.getString(indUri7);
         String uri8 = cursor.getString(indUri8);
-        imageUris.add(Uri.parse(uri1));
-        imageUris.add(Uri.parse(uri2));
-        imageUris.add(Uri.parse(uri3));
-        imageUris.add(Uri.parse(uri4));
-        imageUris.add(Uri.parse(uri5));
-        imageUris.add(Uri.parse(uri6));
-        imageUris.add(Uri.parse(uri7));
-        imageUris.add(Uri.parse(uri8));
+        gameCards.add(new GameCard(Uri.parse(uri1)));
+        gameCards.add(new GameCard(Uri.parse(uri2)));
+        gameCards.add(new GameCard(Uri.parse(uri3)));
+        gameCards.add(new GameCard(Uri.parse(uri4)));
+        gameCards.add(new GameCard(Uri.parse(uri5)));
+        gameCards.add(new GameCard(Uri.parse(uri6)));
+        gameCards.add(new GameCard(Uri.parse(uri7)));
+        gameCards.add(new GameCard(Uri.parse(uri8)));
 
         gameRecord = new GameRecord();
         gameRecord.setGameId(retGameId);
-        gameRecord.setImageUris(imageUris);
+        gameRecord.setGameCards(gameCards);
         return gameRecord;
     }
 
