@@ -12,8 +12,8 @@ public class GameRecord {
 
     public GameRecord() {
         gameId=-1;
-        gameCards =new ArrayList<>(16);
-        for (int i = 0; i < 16; i++) {
+        gameCards =new ArrayList<>(8);
+        for (int i = 0; i < 8; i++) {
             gameCards.add(i,new GameCard());
         }
     }

@@ -20,28 +20,26 @@ import java.util.List;
 public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerViewAdapter.ViewHolder> {
 
     private final Context mContext;
+    private final DisplayImageOptions options;
     List<GameCard> mGameCards;
     private ImageLoader imageLoader;
-    private final DisplayImageOptions options;
-
     private OnItemClickCallback myCallback;
 
-    public GridRecyclerViewAdapter(List<GameCard> mGameCards,Context context) {
+    public GridRecyclerViewAdapter(List<GameCard> mGameCards, Context context) {
         super();
-        this.mContext=context;
+        this.mContext = context;
         imageLoader = ImageLoader.getInstance();
         imageLoader.init(ImageLoaderConfiguration.createDefault(mContext));
         options = new DisplayImageOptions.Builder()
                 .showImageOnLoading(R.drawable.default_pic)
                 .showImageForEmptyUri(R.drawable.default_pic)
-                .showImageOnFail(R.drawable.default_pic)
+                .showImageOnFail(R.drawable.fail_load_image)
                 .cacheInMemory(true)
                 .cacheOnDisk(true)
                 .considerExifParams(true)
                 .bitmapConfig(Bitmap.Config.RGB_565)
+                .resetViewBeforeLoading(true)
                 .build();
-
-
 
 
         this.mGameCards = mGameCards;
@@ -58,15 +56,18 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerVi
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
         GameCard imageItem = mGameCards.get(i);
-        String uri=null;
+        String uri = null;
         Uri imageRef = imageItem.getImageRef();
         if (imageRef != null) {
-
-            uri="file://" +Uri.decode(imageRef.getPath());
+            if (!fromDrawable(imageRef))
+                uri = "file://" + Uri.decode(imageRef.getPath());
+            else {
+                uri = imageRef.toString();
+            }
         }
 
         try {
-            imageLoader.displayImage(uri, viewHolder.imgThumbnail,options);
+            imageLoader.displayImage(uri, viewHolder.imgThumbnail, options);
 
 
         } catch (Exception e) {
@@ -75,19 +76,42 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerVi
 
     }
 
+    private boolean fromDrawable(Uri imageRef) {
+//        Uri backSideCardUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + mContext.getResources().getResourcePackageName(R.drawable.default_pic) +
+//                '/' + mContext.getResources().getResourceTypeName(R.drawable.default_pic) +
+//                '/' + mContext.getResources().getResourceEntryName(R.drawable.default_pic));
+
+        Uri backSideCardUri = Uri.parse("drawable://" + R.drawable.default_pic);
+
+        return imageRef.equals(backSideCardUri);
+    }
+
     @Override
     public int getItemCount() {
         return mGameCards.size();
+    }
+
+    public List<GameCard> getmGameCards() {
+        return mGameCards;
+    }
+
+    public void setMyCallback(OnItemClickCallback myCallback) {
+        this.myCallback = myCallback;
+    }
+
+    public interface OnItemClickCallback {
+        void onItemClicked(GameCard clickedImage, View view, int position);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView imgThumbnail;
 
         public CardView cardView;
+
         public ViewHolder(View itemView) {
             super(itemView);
 
-            cardView= (CardView) itemView.findViewById(R.id.cv);
+            cardView = (CardView) itemView.findViewById(R.id.cv);
 
 
             imgThumbnail = (SquareImageView) itemView.findViewById(R.id.img_thumbnail);
@@ -100,17 +124,8 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerVi
                 }
             });
         }
-    }
-    public interface OnItemClickCallback{
-        void onItemClicked(GameCard clickedImage, View view, int position);
-    }
 
-    public List<GameCard> getmGameCards() {
-        return mGameCards;
-    }
 
-    public void setMyCallback(OnItemClickCallback myCallback) {
-        this.myCallback = myCallback;
     }
 
 }

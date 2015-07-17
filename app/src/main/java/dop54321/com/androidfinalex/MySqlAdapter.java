@@ -7,28 +7,31 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MySqlAdapter {
 
-    public static final int URI_LIST_SIZE = 16;
-    private MySqlHelper mySqlHelper;
+    private static final int URI_LIST_SIZE = 8;
     private static MySqlAdapter instanse;
+    private final Context context;
+    private MySqlHelper mySqlHelper;
 
     private MySqlAdapter(Context context) {
+        this.context=context;
         mySqlHelper = new MySqlHelper(context);
     }
 
-    public static MySqlAdapter build(Context context){
-        instanse=new MySqlAdapter(context);
+    public static MySqlAdapter build(Context context) {
+        instanse = new MySqlAdapter(context);
         return instanse;
     }
-    public static MySqlAdapter getInstanse(){
-       return instanse;
-    }
 
+    public static MySqlAdapter getInstanse() {
+        return instanse;
+    }
 
 
     private long insertGameRecord(int gameId, List<GameCard> gameCards) {
@@ -40,18 +43,18 @@ public class MySqlAdapter {
 
             contentValues.put(MySqlHelper.GID, gameId);
             contentValues.put(MySqlHelper.URI1, gameCards.get(0).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI2, gameCards.get(2).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI3, gameCards.get(4).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI4, gameCards.get(6).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI5, gameCards.get(8).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI6, gameCards.get(10).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI7, gameCards.get(12).getImageRef().toString());
-            contentValues.put(MySqlHelper.URI8, gameCards.get(14).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI2, gameCards.get(1).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI3, gameCards.get(2).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI4, gameCards.get(3).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI5, gameCards.get(4).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI6, gameCards.get(5).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI7, gameCards.get(6).getImageRef().toString());
+            contentValues.put(MySqlHelper.URI8, gameCards.get(7).getImageRef().toString());
 
             try {
                 id = db.insertOrThrow(MySqlHelper.GAME_TABLE_NAME, null, contentValues);
             } catch (SQLException e) {
-                e.printStackTrace();
+                Toast.makeText(context,"error insert record to database",Toast.LENGTH_LONG).show();
             }
 
         }
@@ -111,21 +114,21 @@ public class MySqlAdapter {
         String uri7 = cursor.getString(indUri7);
         String uri8 = cursor.getString(indUri8);
         gameCards.add(new GameCard(Uri.parse(uri1)));
-        gameCards.add(new GameCard(Uri.parse(uri1)));
+
         gameCards.add(new GameCard(Uri.parse(uri2)));
-        gameCards.add(new GameCard(Uri.parse(uri2)));
+
         gameCards.add(new GameCard(Uri.parse(uri3)));
-        gameCards.add(new GameCard(Uri.parse(uri3)));
+
         gameCards.add(new GameCard(Uri.parse(uri4)));
-        gameCards.add(new GameCard(Uri.parse(uri4)));
+
         gameCards.add(new GameCard(Uri.parse(uri5)));
-        gameCards.add(new GameCard(Uri.parse(uri5)));
+
         gameCards.add(new GameCard(Uri.parse(uri6)));
-        gameCards.add(new GameCard(Uri.parse(uri6)));
+
         gameCards.add(new GameCard(Uri.parse(uri7)));
-        gameCards.add(new GameCard(Uri.parse(uri7)));
+
         gameCards.add(new GameCard(Uri.parse(uri8)));
-        gameCards.add(new GameCard(Uri.parse(uri8)));
+
 
         gameRecord = new GameRecord();
         gameRecord.setGameId(retGameId);
@@ -133,7 +136,7 @@ public class MySqlAdapter {
         return gameRecord;
     }
 
-    private boolean legalGameId(int gameId) {
+    public boolean legalGameId(int gameId) {
 
         if (gameId > 0 && !gameAlreadyExist(gameId)) {
             return true;
@@ -142,7 +145,7 @@ public class MySqlAdapter {
         }
     }
 
-    private boolean gameAlreadyExist(int gameId) {
+    public boolean gameAlreadyExist(int gameId) {
         Boolean exist = false;
 
         SQLiteDatabase db = mySqlHelper.getWritableDatabase();
@@ -156,7 +159,7 @@ public class MySqlAdapter {
             exist = true;
         }
 
-        return false;
+        return exist;
     }
 
     static class MySqlHelper extends SQLiteOpenHelper {
@@ -183,10 +186,11 @@ public class MySqlAdapter {
                 URI7 + " VARCHAR(255), " +
                 URI8 + " VARCHAR(255) "
                 + ");";
-        private static final int DATABASE_VERSION = 1;
+        private static final int DATABASE_VERSION = 3;
 
         public MySqlHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
+
 
         }
 

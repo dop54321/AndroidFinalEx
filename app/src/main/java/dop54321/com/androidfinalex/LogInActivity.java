@@ -80,8 +80,12 @@ public class LogInActivity extends ActionBarActivity implements View.OnClickList
         chooseGameIdDialog.setTitle(getString(R.string.dialog_choose_game_id_title));
         chooseGameIdDialog.setContentView(R.layout.dialog_enter_game_id);
 
+
+
+
         //show dialog
         chooseGameIdDialog.show();
+
 
         //Initialize dialog views
         setDialogViews(chooseGameIdDialog);
@@ -98,18 +102,21 @@ public class LogInActivity extends ActionBarActivity implements View.OnClickList
             public void onClick(View v) {
                 String gameIdString = etGameId.getText().toString();
                 int gameId = -1;
-                if (gameIdString == null) {
+                if (gameIdString != null) {
                     gameId = Integer.parseInt(gameIdString);
+                    if (isGameExist(gameId)) {
+                        //start GameActivity with the number id of the game.
+                        moveToGameActivity(gameId);
+                    } else {
+                        //There is not saved game that match the gameId,
+                        //so show Toast message that there is no saved game that match this game id
+                        String noMatchedGameMessage = "There is no match for game id: " + gameIdString;
+                        Toast.makeText(getApplicationContext(), noMatchedGameMessage, Toast.LENGTH_LONG).show();
+                    }
+                }else {
+                    Toast.makeText(getApplicationContext(), getString(R.string.game_id_must_not_ne_null_error), Toast.LENGTH_LONG).show();
                 }
-                if (isGameExist(gameId)) {
-                    //start GameActivity with the number id of the game.
-                    moveToGameActivity(gameId);
-                } else {
-                    //There is not saved game that match the gameId,
-                    //so show Toast message that there is no saved game that match this game id
-                    String noMatchedGameMessage = "There is no match for game id: " + gameIdString;
-                    Toast.makeText(getApplicationContext(), noMatchedGameMessage, Toast.LENGTH_LONG).show();
-                }
+
             }
         });
         bCancel.setOnClickListener(new View.OnClickListener() {
@@ -122,13 +129,18 @@ public class LogInActivity extends ActionBarActivity implements View.OnClickList
     }
 
     private boolean isGameExist(int gameId) {
-        //TODO implement check if game exist
-
-        return false;
+        return MySqlAdapter.getInstanse().gameAlreadyExist(gameId);
     }
 
     private void moveToGameActivity(int gameId) {
+
         //TODO implement moveToGameActivity
+
+        Intent gameActivityIntent=new Intent();
+        gameActivityIntent.setClass(this,GameActivity.class);
+        gameActivityIntent.putExtra(GameActivity.GAME_ID_EXTRA,gameId);
+        startActivity(gameActivityIntent);
+
 
         //TODO remove toast
         Toast.makeText(getApplicationContext(), "Moving to game activity, id:" + gameId, Toast.LENGTH_LONG).show();

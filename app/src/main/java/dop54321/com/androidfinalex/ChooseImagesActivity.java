@@ -1,6 +1,9 @@
 package dop54321.com.androidfinalex;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,9 +11,11 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -19,15 +24,13 @@ import java.util.List;
 
 public class ChooseImagesActivity extends AppCompatActivity implements GridRecyclerViewAdapter.OnItemClickCallback {
 
+    public static final int NUM_OF_CARD_ON_GRID = 16;
     private static final int RESULT_LOAD_IMG = 1231;
-
-
     RecyclerView mRecyclerView;
     RecyclerView.LayoutManager mLayoutManager;
     GridRecyclerViewAdapter mAdapter;
-    List<GameCard> gameCards;
+    List<GameCard> cardsOnGrid;
 
-    GameRecord gameRecord = new GameRecord();
     private GameCard clickedCard;
     private int clickedCardPosition;
 
@@ -35,7 +38,9 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_images);
-        gameCards = new ArrayList<>(16);
+        cardsOnGrid = new ArrayList<>(NUM_OF_CARD_ON_GRID);
+
+        initCardsOnGrid();
 
         // Calling the RecyclerView
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -46,14 +51,20 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
 
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new GridRecyclerViewAdapter(gameRecord.getGameCards(), this);
+        mAdapter = new GridRecyclerViewAdapter(this.cardsOnGrid, this);
         mAdapter.setMyCallback(this);
 
         mRecyclerView.setAdapter(mAdapter);
 
     }
 
-    private void startPickImageActivity(int position) {
+    private void initCardsOnGrid() {
+        for (int i = 0; i < NUM_OF_CARD_ON_GRID; i++) {
+            this.cardsOnGrid.add(i, new GameCard());
+        }
+    }
+
+    private void startPickImageActivity() {
         // Create intent to Open Image applications like Gallery, Google Photos
         Intent galleryIntent = new Intent(Intent.ACTION_PICK);
         galleryIntent.setType("image/*");
@@ -84,7 +95,6 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
 
 
                 Uri uri = Uri.parse(picturePath);
-                //this.clickedCard.setImageRef(uri);
 
                 //check if image has selected yet (already exist..)
                 if (!isUriExist(uri, mAdapter.getmGameCards())) {
@@ -93,7 +103,7 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
                     this.mAdapter.getmGameCards().get(otherPosition).setImageRef(uri);
                     this.mAdapter.notifyItemChanged(clickedCardPosition);
                     this.mAdapter.notifyItemChanged(otherPosition);
-                }else
+                } else
                     throw new IllegalArgumentException("Image allready in the game.");
 
 
@@ -102,7 +112,7 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
                         Toast.LENGTH_LONG).show();
             }
         } catch (IllegalArgumentException e) {
-            Toast.makeText(this,e.getMessage(), Toast.LENGTH_LONG)
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG)
                     .show();
         } catch (Exception e) {
             Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG)
@@ -111,11 +121,11 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
     }
 
     private boolean isUriExist(Uri uri, List<GameCard> gameCards) {
-        Boolean exist=false;
+        Boolean exist = false;
         for (GameCard gameCard : gameCards) {
-            if (gameCard.getImageRef()!=null) {
+            if (gameCard.getImageRef() != null) {
                 if (gameCard.getImageRef().equals(uri))
-                    exist=true;
+                    exist = true;
             }
         }
         return exist;
@@ -143,17 +153,45 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }else if (id==R.id.action_complete){
-            if (isAllCardsFilled(this.gameRecord)){
+        } else if (id == R.id.action_complete) {
+            if (isAllCardsFilled(this.cardsOnGrid)) {
+
                 //display dialog for enter game id
                 //TODO: display dialog for enter game id
 
-                //add the entered game id to the game record
-                //TODO: add the entered game id to the game record
+                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                alert.setTitle("Enter game id");
+                final EditText input = new EditText(this);
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                input.setRawInputType(Configuration.KEYBOARD_12KEY);
+                alert.setView(input);
+                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        int gameId = Integer.parseInt(input.getText().toString());
+                        MySqlAdapter sqlManager = MySqlAdapter.getInstanse();
 
-                //save game record in local sql
-                MySqlAdapter sqlManager = MySqlAdapter.getInstanse();
-                sqlManager.insertGameRecord(this.gameRecord);
+                        if (sqlManager.legalGameId(gameId)) {
+                            //save game record in local sql
+
+                            GameRecord record = createGameRecord(ChooseImagesActivity.this.cardsOnGrid);
+                            record.setGameId(gameId);
+                            sqlManager.insertGameRecord(record);
+                            Toast.makeText(ChooseImagesActivity.this,"Game: "+gameId+", successfully added",Toast.LENGTH_LONG).show();
+                        }else {
+                            Toast.makeText(ChooseImagesActivity.this,"Game id not legal!",Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        //Put actions for CANCEL button here, or leave in blank
+                    }
+                });
+                alert.show();
+
+
+            } else {
+                Toast.makeText(this, getString(R.string.error_toast_not_all_cards_filled), Toast.LENGTH_LONG).show();
             }
 
         }
@@ -161,11 +199,24 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
         return super.onOptionsItemSelected(item);
     }
 
-    private boolean isAllCardsFilled(GameRecord gameRecord) {
-        Boolean valid=true;
-        for (GameCard gameCard : gameRecord.getGameCards()) {
-            if (gameCard.getImageRef()==null){
-                valid=false;
+
+
+    private GameRecord createGameRecord(List<GameCard> cardsOnGrid) {
+        List<GameCard> recordCards = new ArrayList<>();
+        for (int i = 0; i < this.NUM_OF_CARD_ON_GRID; i = i + 2) {
+            recordCards.add(cardsOnGrid.get(i));
+        }
+
+        GameRecord record = new GameRecord();
+        record.setGameCards(recordCards);
+        return record;
+    }
+
+    private boolean isAllCardsFilled(List<GameCard> cards) {
+        Boolean valid = true;
+        for (GameCard gameCard : cards) {
+            if (gameCard.getImageRef() == null) {
+                valid = false;
             }
         }
         return valid;
@@ -176,7 +227,7 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
     public void onItemClicked(GameCard clickedImage, View view, int position) {
         this.clickedCard = clickedImage;
         this.clickedCardPosition = position;
-        startPickImageActivity(position);
+        startPickImageActivity();
 
     }
 }
