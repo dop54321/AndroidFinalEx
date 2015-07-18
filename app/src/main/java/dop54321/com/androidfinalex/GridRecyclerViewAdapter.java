@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 
 import java.util.List;
 
@@ -34,15 +35,24 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<GridRecyclerVi
                 .showImageOnLoading(R.drawable.default_pic)
                 .showImageForEmptyUri(R.drawable.default_pic)
                 .showImageOnFail(R.drawable.fail_load_image)
-                .cacheInMemory(true)
-                .cacheOnDisk(true)
-                .considerExifParams(true)
+                        // .cacheInMemory(true)
+                        // .cacheOnDisk(true)
+                //.considerExifParams(true)
+                .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2)
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .resetViewBeforeLoading(true)
+
                 .build();
-
-
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
+                context)
+                .threadPoolSize(1)
+                .diskCacheExtraOptions(480, 320, null)
+                        // .memoryCache(new UsingFreqLimitedMemoryCache(2000000)) // You
+                        // can pass your own memory cache implementation
+                .build();
+        ImageLoader.getInstance().init(config);
         this.mGameCards = mGameCards;
+
     }
 
     @Override

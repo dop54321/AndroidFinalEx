@@ -177,6 +177,7 @@ public class ChooseImagesActivity extends AppCompatActivity implements GridRecyc
                             record.setGameId(gameId);
                             sqlManager.insertGameRecord(record);
                             Toast.makeText(ChooseImagesActivity.this,"Game: "+gameId+", successfully added",Toast.LENGTH_LONG).show();
+                            finish();
                         }else {
                             Toast.makeText(ChooseImagesActivity.this,"Game id not legal!",Toast.LENGTH_LONG).show();
                         }

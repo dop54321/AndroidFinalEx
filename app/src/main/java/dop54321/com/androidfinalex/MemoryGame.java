@@ -53,4 +53,9 @@ public class MemoryGame {
     public List<GameCard> getmGameCards() {
         return mGameCards;
     }
+
+    public void startNewGame(){
+        mGuessCounter = 0;
+        mTrueGuesses = 0;
+    }
 }

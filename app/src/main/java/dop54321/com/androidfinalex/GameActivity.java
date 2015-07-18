@@ -1,5 +1,7 @@
 package dop54321.com.androidfinalex;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +31,8 @@ public class GameActivity extends AppCompatActivity implements GridRecyclerViewA
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        //get game id to be loaded from intent data, and load the game record from the sqlite database
         Intent intent = getIntent();
         if (intent != null) {
             int gameId = intent.getIntExtra(GAME_ID_EXTRA, -1);
@@ -44,6 +50,7 @@ public class GameActivity extends AppCompatActivity implements GridRecyclerViewA
             finish();
         }
 
+        //initialize the recyclerview withe the adapter and the cards list
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
 
@@ -68,6 +75,12 @@ public class GameActivity extends AppCompatActivity implements GridRecyclerViewA
             gameCard.setCardBackSided();
         }
         mMemoryGame.shuffleCards();
+        mMemoryGame.startNewGame();
+        mFirstCardPosition = -1;
+        mSecondCardPosition = -1;
+
+        mFlipCounter = 0;
+
 
     }
 
@@ -119,11 +132,26 @@ public class GameActivity extends AppCompatActivity implements GridRecyclerViewA
 
             } else {
                 if (mMemoryGame.isGameOver()) {
-                    String message = "You win!!!" + " total guesses" + mMemoryGame.getmGuessCounter();
+                    String messageToDisplay = "total guesses: " + mMemoryGame.getmGuessCounter();
                     //ToDo: display "you win dialog message"
 
-                    //Todo: delete this toast message
-                    MakeMessage.show(this, message);
+                    AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                    alert.setTitle("You win!!!");
+                    alert.setMessage(messageToDisplay);
+                    alert.setPositiveButton("New game", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            initGameCardsToBackAndShuffle();
+                            mAdapter.notifyDataSetChanged();
+                        }
+                    });
+                    alert.setNegativeButton("Finish", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            finish();
+                        }
+                    });
+                    alert.show();
+
+
                 }
             }
             mFirstCardPosition = -1;
